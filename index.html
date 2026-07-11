@@ -171,9 +171,9 @@
     var currentId = "";
     
     // =========================================================================
-    // CONFIGURAZIONE JSONBIN (Chiavi aggiornate)
+    // 1. INCOLLA QUI LA TUA MASTER KEY (sostituisci il testo tra le virgolette)
     // =========================================================================
-    var API_KEY = "$2a$10$2JOPZfOB1Q0m2V5.RTwBG.NvdDi48Xtx22em90R8xoXpyzYv93HaW"; 
+    var API_KEY = "$2a$10$NNi8R1qnzwGu64GesdAhaOF/x87LxLfTxK9flwDA7GVZZOqMSYqIK"; 
     var BIN_ID = "6a525173f5f4af5e2981100f"; 
     // =========================================================================
 
@@ -210,7 +210,8 @@
         var xhr = new XMLHttpRequest();
         xhr.open("GET", "https://api.jsonbin.io/v3/b/" + BIN_ID + "/latest", true);
         
-        xhr.setRequestHeader("X-Access-Key", API_KEY);
+        // 2. MODIFICA QUI: X-Master-Key invece di X-Access-Key
+        xhr.setRequestHeader("X-Master-Key", API_KEY);
         
         xhr.onreadystatechange = function () {
             if (xhr.readyState === 4 && xhr.status === 200) {
@@ -239,7 +240,8 @@
         xhr.open("PUT", "https://api.jsonbin.io/v3/b/" + BIN_ID, true);
         
         xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.setRequestHeader("X-Access-Key", API_KEY);
+        // 3. MODIFICA QUI: X-Master-Key invece di X-Access-Key
+        xhr.setRequestHeader("X-Master-Key", API_KEY);
         
         xhr.onreadystatechange = function () {
             if (xhr.readyState === 4) {
