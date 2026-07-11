@@ -200,7 +200,6 @@
 
     var container = document.getElementById("gdr-mappa-pioggia");
     
-    // Generazione dei bottoni con supporto Drag and Drop integrato
     Object.keys(territories).forEach(function(id){
         var t = territories[id];
         var btn = document.createElement("button");
@@ -209,31 +208,37 @@
         btn.style.top = t.top;
         btn.style.left = t.left;
         
-        // Logica click / trascinamento differenziata
         var isDragging = false;
 
         btn.onmousedown = function(e) {
-            if (!isMasterMode) return; // Permesso solo ai Master
             isDragging = false;
             btn.classList.add("draggable-active");
 
             var rect = container.getBoundingClientRect();
 
             function onMouseMove(moveEvent) {
-                isDragging = true;
-                // Calcola le percentuali in tempo reale sul movimento del mouse
-                var x = moveEvent.clientX - rect.left;
-                var y = moveEvent.clientY - rect.top;
+                // Calcoliamo la distanza del movimento
+                var movementX = Math.abs(moveEvent.clientX - e.clientX);
+                var movementY = Math.abs(moveEvent.clientY - e.clientY);
                 
-                var pctX = Math.min(Math.max((x / rect.width) * 100, 0), 100);
-                var pctY = Math.min(Math.max((y / rect.height) * 100, 0), 100);
+                // Se si sposta di più di 4 pixel, è un trascinamento vero e proprio
+                if (movementX > 4 || movementY > 4) {
+                    isDragging = true;
+                }
 
-                btn.style.left = pctX.toFixed(1) + "%";
-                btn.style.top = pctY.toFixed(1) + "%";
+                if (isDragging) {
+                    var x = moveEvent.clientX - rect.left;
+                    var y = moveEvent.clientY - rect.top;
+                    
+                    var pctX = Math.min(Math.max((x / rect.width) * 100, 0), 100);
+                    var pctY = Math.min(Math.max((y / rect.height) * 100, 0), 100);
 
-                // Salva temporaneamente le nuove coordinate nell'oggetto locale
-                territories[id].left = btn.style.left;
-                territories[id].top = btn.style.top;
+                    btn.style.left = pctX.toFixed(1) + "%";
+                    btn.style.top = pctY.toFixed(1) + "%";
+
+                    territories[id].left = btn.style.left;
+                    territories[id].top = btn.style.top;
+                }
             }
 
             function onMouseUp() {
@@ -247,7 +252,7 @@
         };
 
         btn.onclick = function(){ 
-            // Apri la scheda solo se non stavi trascinando e non sei in modalità Master
+            // Permette l'apertura se non stavamo trascinando il tasto
             if (!isDragging) {
                 openModal(id); 
             }
@@ -270,7 +275,6 @@
                     Object.keys(res.record).forEach(function(key) {
                         if (territories[key]) {
                             territories[key] = res.record[key];
-                            // Applica subito le coordinate scaricate dal database ai bottoni fisici
                             var btnElement = Array.from(container.getElementsByClassName("territory-btn")).find(function(b) {
                                 return b.innerText === territories[key].name;
                             });
@@ -289,7 +293,6 @@
     function salvaDatabase() {
         if(!BIN_ID) return;
         
-        // Se stiamo modificando un territorio specifico, aggiorna prima i suoi testi
         if(currentId && territories[currentId]) {
             territories[currentId].storia = document.getElementById("t-storia").value;
             territories[currentId].trama = document.getElementById("t-trama").value;
@@ -338,18 +341,14 @@
             document.getElementById(fId).readOnly = !isMasterMode;
         });
         
-        // Cambia colore temporaneamente ai bottoni per far capire che sono pronti al trascinamento
         Array.from(container.getElementsByClassName("territory-btn")).forEach(function(b) {
             b.style.backgroundColor = isMasterMode ? "rgba(21, 101, 192, 0.85)" : "rgba(139,90,51,0.85)";
         });
 
-        alert(isMasterMode ? "🔓 Modalità modifica attiva: ora puoi TRASCINARE i pulsanti sulla mappa con il mouse!" : "🔒 Mappa bloccata. Modalità Visualizzazione.");
+        alert(isMasterMode ? "🔓 Modalità modifica attiva: Trascina i pulsanti per spostarli, o cliccali normalmente per modificare i testi delle schede!" : "🔒 Mappa bloccata. Modalità Visualizzazione.");
     }
     
     function openModal(id){
-        // In modalità master, impedisce l'apertura immediata della scheda per dare priorità allo spostamento
-        if(isMasterMode) return; 
-
         currentId = id;
         var t = territories[id];
         document.getElementById("m-title").innerText = t.name;
