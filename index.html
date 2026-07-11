@@ -171,15 +171,15 @@
     var currentId = "";
     
     // =========================================================================
-    // MODIFICA QUESTE DUE RIGHE DENTRO LE VIRGOLETTE CON I TUOI DATI DI JSONBIN
+    // CONFIGURAZIONE JSONBIN (Chiavi aggiornate)
     // =========================================================================
-    var API_KEY = "IL_TUO_ACCESS_KEY_SICURO"; 
-    var BIN_ID = "L_ID_DEL_BIN_CHE_HAI_CREATO_A_MANO";
+    var API_KEY = "$2a$10$zkgUymRIDozQGr7M7kRq5euetqdpCtvMSy0GjNeKkWpin46oys2di"; 
+    var BIN_ID = "6a525173f5f4af5e2981100f"; 
     // =========================================================================
 
     var territories = {
         "centro": { name: "Centro del Paese", top: "52%", left: "51%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
-        "kokei": { name: "Kōkei", top: "37%", left: "27%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
+        "kokei": { name: "K\u014dkei", top: "37%", left: "27%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
         "nord_verde": { name: "Territorio Nord Verde", top: "15%", left: "33%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
         "nord_marrone": { name: "Territorio Nord Marrone", top: "14%", left: "71%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
         "est_arancio": { name: "Territorio Est", top: "49%", left: "89%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
@@ -206,17 +206,15 @@
     });
 
     function scaricaDatabase() {
-        if (!BIN_ID || BIN_ID === "L_ID_DEL_BIN_CHE_HAI_CREATO_A_MANO") return; 
+        if (!BIN_ID) return; 
         var xhr = new XMLHttpRequest();
         xhr.open("GET", "https://api.jsonbin.io/v3/b/" + BIN_ID + "/latest", true);
         
-        xhr.setRequestHeader("X-Master-Key", API_KEY);
         xhr.setRequestHeader("X-Access-Key", API_KEY);
         
         xhr.onreadystatechange = function () {
             if (xhr.readyState === 4 && xhr.status === 200) {
                 var res = JSON.parse(xhr.responseText);
-                // Se il file su JSONBin ha già dentro i dati salvati li carica, altrimenti tiene quelli base
                 if(res.record && Object.keys(res.record).length > 0) {
                     territories = res.record;
                 }
@@ -226,7 +224,7 @@
     }
 
     function salvaDatabase() {
-        if(!currentId) return;
+        if(!currentId || !BIN_ID) return;
         
         territories[currentId].storia = document.getElementById("t-storia").value;
         territories[currentId].trama = document.getElementById("t-trama").value;
@@ -241,13 +239,12 @@
         xhr.open("PUT", "https://api.jsonbin.io/v3/b/" + BIN_ID, true);
         
         xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.setRequestHeader("X-Master-Key", API_KEY);
         xhr.setRequestHeader("X-Access-Key", API_KEY);
         
         xhr.onreadystatechange = function () {
             if (xhr.readyState === 4) {
                 if(xhr.status === 200) {
-                    alert("✨ Modifiche salvate nel database con la tua chiave sicura!");
+                    alert("✨ Modifiche salvate nel database con successo!");
                 } else {
                     alert("Errore di salvataggio. Codice errore di risposta: " + xhr.status);
                 }
