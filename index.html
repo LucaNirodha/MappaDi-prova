@@ -210,13 +210,13 @@
         var xhr = new XMLHttpRequest();
         xhr.open("GET", "https://api.jsonbin.io/v3/b/" + BIN_ID + "/latest", true);
         
-        // 2. MODIFICA QUI: X-Master-Key invece di X-Access-Key
         xhr.setRequestHeader("X-Master-Key", API_KEY);
         
         xhr.onreadystatechange = function () {
             if (xhr.readyState === 4 && xhr.status === 200) {
                 var res = JSON.parse(xhr.responseText);
-                if(res.record && Object.keys(res.record).length > 0) {
+                // RETE DI SICUREZZA: Aggiorna solo se c'è davvero la mappa nel database!
+                if(res.record && res.record.centro) {
                     territories = res.record;
                 }
             }
@@ -240,7 +240,6 @@
         xhr.open("PUT", "https://api.jsonbin.io/v3/b/" + BIN_ID, true);
         
         xhr.setRequestHeader("Content-Type", "application/json");
-        // 3. MODIFICA QUI: X-Master-Key invece di X-Access-Key
         xhr.setRequestHeader("X-Master-Key", API_KEY);
         
         xhr.onreadystatechange = function () {
