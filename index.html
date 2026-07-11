@@ -170,15 +170,12 @@
     var isMasterMode = false;
     var currentId = "";
     
-    // ==========================================
-    // INCOLLA QUI LA TUA MASTER KEY DI JSONBIN
-    // ==========================================
-var API_KEY = "$2a$10$NNi8R1qnzwGu64GesdAhaOF/x87LxLfTxK9flwDA7GVZZOqMSYqiK"; 
-var BIN_ID = localStorage.getItem("gdr_bin_id") || "";
+    var API_KEY = "$2a$10$NNi8R1qnzwGu64GesdAhaOF/x87LxLfTxK9flwDA7GVZZOqMSYqiK"; 
+    var BIN_ID = localStorage.getItem("gdr_bin_id") || "";
 
     var territories = {
-        "centro": { name: "Centro del Paese", top: "52%", left: "51%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
-        "kokei": { name: "Kōkei", top: "37%", left: "27%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
+        "centro": { name: "Centro del Paese", top: "52%", left: "51%", image: "https://via.placeholder.com/600x220", storia: "Testo di base per il centro...", trama: "", indizi: ["","","",""] },
+        "kokei": { name: "Kōkei", top: "37%", left: "27%", image: "https://via.placeholder.com/600x220", storia: "Avamposto di Kōkei...", trama: "", indizi: ["","","",""] },
         "nord_verde": { name: "Territorio Nord Verde", top: "15%", left: "33%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
         "nord_marrone": { name: "Territorio Nord Marrone", top: "14%", left: "71%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
         "est_arancio": { name: "Territorio Est", top: "49%", left: "89%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
@@ -204,8 +201,8 @@ var BIN_ID = localStorage.getItem("gdr_bin_id") || "";
         container.appendChild(btn);
     });
 
-    // Funzione per scaricare i dati dal database online
     function scaricaDatabase() {
+        if (!BIN_ID) return; 
         var xhr = new XMLHttpRequest();
         xhr.open("GET", "https://api.jsonbin.io/v3/b/" + BIN_ID + "/latest", true);
         xhr.setRequestHeader("X-Master-Key", API_KEY);
@@ -218,7 +215,6 @@ var BIN_ID = localStorage.getItem("gdr_bin_id") || "";
         xhr.send();
     }
 
-    // Funzione per salvare le modifiche sul database online
     function salvaDatabase() {
         if(!currentId) return;
         
@@ -229,18 +225,32 @@ var BIN_ID = localStorage.getItem("gdr_bin_id") || "";
         territories[currentId].indizi[2] = document.getElementById("c-3").value;
         territories[currentId].indizi[3] = document.getElementById("c-4").value;
 
-        document.getElementById("gdr-save-btn").innerText = "🔄 SALVATAGGIO IN CORSO...";
+        document.getElementById("gdr-save-btn").innerText = "🔄 SALVATAGGIO...";
 
         var xhr = new XMLHttpRequest();
-        xhr.open("PUT", "https://api.jsonbin.io/v3/b/" + BIN_ID, true);
+        
+        if (!BIN_ID) {
+            xhr.open("POST", "https://api.jsonbin.io/v3/b", true);
+            xhr.setRequestHeader("X-Bin-Name", "MappaDati");
+            xhr.setRequestHeader("X-Private", "true");
+        } else {
+            xhr.open("PUT", "https://api.jsonbin.io/v3/b/" + BIN_ID, true);
+        }
+        
         xhr.setRequestHeader("Content-Type", "application/json");
         xhr.setRequestHeader("X-Master-Key", API_KEY);
+        
         xhr.onreadystatechange = function () {
             if (xhr.readyState === 4) {
                 if(xhr.status === 200) {
-                    alert("✨ Salvato con successo nel database online! Ora tutti i player vedranno le modifiche.");
+                    var res = JSON.parse(xhr.responseText);
+                    if (!BIN_ID && res.metadata && res.metadata.id) {
+                        BIN_ID = res.metadata.id;
+                        localStorage.setItem("gdr_bin_id", BIN_ID);
+                    }
+                    alert("✨ Database sincronizzato con successo!");
                 } else {
-                    alert("Errore di salvataggio. Controlla la tua Master Key.");
+                    alert("Errore. Verifica la configurazione di JSONBin.");
                 }
                 document.getElementById("gdr-save-btn").innerText = "💾 SALVA MODIFICHE ONLINE";
             }
@@ -257,7 +267,7 @@ var BIN_ID = localStorage.getItem("gdr_bin_id") || "";
         fields.forEach(function(fId){
             document.getElementById(fId).readOnly = !isMasterMode;
         });
-        alert(isMasterMode ? "Pannello di Gestione Attivato! Ora puoi modificare i testi direttamente da qui." : "Modalità Giocatore attiva.");
+        alert(isMasterMode ? "Pannello Modifiche Sbloccato!" : "Modalità Giocatore.");
     }
 
     function openModal(id){
