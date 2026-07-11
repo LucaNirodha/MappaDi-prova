@@ -1,6 +1,6 @@
 <div style="display: flex; justify-content: center; align-items: center; width: 100%; padding: 15px 0;">
-    <div id="gdr-mappa-pioggia" style="display:inline-block; position:relative; width: 95vw; max-width: 95vh;">
-        <img src="https://i.imgur.com/GmBpgEG.png" alt="Mappa" style="display:block; width:100%; height:auto; border:4px solid #6a4625; border-radius:4px; box-shadow:0 10px 30px rgba(0,0,0,0.7);">
+    <div id="gdr-mappa-pioggia" style="display:inline-block; position:relative; width: 75vw; height: 90vh;">
+        <img src="https://i.imgur.com/GmBpgEG.png" alt="Mappa" style="display:block; width:100%; height:100%; object-fit:fill; border:4px solid #6a4625; border-radius:4px; box-shadow:0 10px 30px rgba(0,0,0,0.7);">
         <button id="gdr-master-gear" style="position:absolute; top:15px; right:15px; background:none; border:none; font-size:24px; cursor:pointer; z-index:100; opacity:0.3; text-shadow: 0 0 5px rgba(255,255,255,0.8);">⚙️ Gestione</button>
     </div>
 </div>
@@ -54,6 +54,7 @@
         box-shadow: 0 4px 8px rgba(0,0,0,0.5);
         transition: all 0.2s ease;
         z-index: 10;
+        white-space: nowrap;
     }
     .territory-btn:hover {
         background-color: var(--primary-brown);
@@ -173,25 +174,23 @@
     var currentId = "";
     
     // =========================================================================
-    // 1. INCOLLA QUI LA TUA MASTER KEY (sostituisci il testo tra le virgolette)
+    // CONFIGURAZIONE CREDENZIALI
     // =========================================================================
     var API_KEY = "$2a$10$NNi8R1qnzwGu64GesdAhaOF/x87LxLfTxK9flwDA7GVZZOqMSYqIK"; 
     var BIN_ID = "6a525173f5f4af5e2981100f"; 
     // =========================================================================
 
+    // Gestione pulita con gli 8 territori definitivi calibrati per non uscire dai bordi
     var territories = {
         "centro": { name: "Centro del Paese", top: "52%", left: "51%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
-        "kokei": { name: "K\u014dkei", top: "37%", left: "27%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
-        "nord_verde": { name: "Territorio Nord Verde", top: "15%", left: "33%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
-        "nord_marrone": { name: "Territorio Nord Marrone", top: "14%", left: "71%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
-        "est_arancio": { name: "Territorio Est", top: "49%", left: "89%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
-        "sud_arancio": { name: "Territorio Sud", top: "88%", left: "50%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
-        "ovest_giallo": { name: "Territorio Ovest", top: "58%", left: "10%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
-        "bordo_nord_ovest": { name: "Confine Nord-Ovest", top: "13%", left: "9%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
-        "bordo_nord": { name: "Terre del Nord", top: "2%", left: "50%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
-        "bordo_est": { name: "Terre dell'Est", top: "45%", left: "98%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
-        "bordo_sud_ovest": { name: "Confine Sud-Ovest", top: "92%", left: "8px", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
-        "bordo_sud_est": { name: "Confine Sud-Est", top: "93%", left: "86%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] }
+        "kokei": { name: "Kōkei", top: "37%", left: "27%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
+        "nord_marrone": { name: "Territorio Nord Marrone", top: "14%", left: "65%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
+        "est_arancio": { name: "Territorio Est", top: "47%", left: "73%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
+        "sud_arancio": { name: "Territorio Sud", top: "83%", left: "50%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
+        "ovest_giallo": { name: "Territorio Ovest", top: "55%", left: "12%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
+        "bordo_nord_ovest": { name: "Confine Nord-Ovest", top: "13%", left: "12%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
+        "bordo_sud_ovest": { name: "Confine Sud-Ovest", top: "87%", left: "10%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
+        "bordo_sud_est": { name: "Confine Sud-Est", top: "88%", left: "70%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] }
     };
 
     var container = document.getElementById("gdr-mappa-pioggia");
@@ -217,9 +216,13 @@
         xhr.onreadystatechange = function () {
             if (xhr.readyState === 4 && xhr.status === 200) {
                 var res = JSON.parse(xhr.responseText);
-                // RETE DI SICUREZZA: Aggiorna solo se c'è davvero la mappa nel database!
                 if(res.record && res.record.centro) {
-                    territories = res.record;
+                    // Sincronizza solo gli 8 territori attivi per non ricaricare quelli vecchi dal database online
+                    Object.keys(res.record).forEach(function(key) {
+                        if (territories[key]) {
+                            territories[key] = res.record[key];
+                        }
+                    });
                 }
             }
         };
@@ -258,18 +261,14 @@
     }
 
    function toggleMasterMode(){
-        // Se stiamo cercando di sbloccare la gestione, chiediamo la password
         if (!isMasterMode) {
             var password = prompt("Inserisci la password:");
-            
-            // Sostituisci "Master123" con la vera password che vuoi dare ai gestori
             if (password !== "NNRFATI1") {
                 alert("❌ Password errata! Non sei autorizzato.");
-                return; // Ferma tutto, non sblocca la mappa
+                return; 
             }
         }
 
-        // Se la password è giusta (o se stiamo semplicemente richiudendo la gestione)
         isMasterMode = !isMasterMode;
         document.getElementById("gdr-master-gear").style.opacity = isMasterMode ? "1" : "0.3";
         document.getElementById("gdr-save-btn").style.display = isMasterMode ? "block" : "none";
@@ -281,6 +280,7 @@
         
         alert(isMasterMode ? "🔓 Pannello di Modifica Sbloccato!" : "🔒 Mappa bloccata. Modalità Visualizzazione.");
     }
+    
     function openModal(id){
         currentId = id;
         var t = territories[id];
