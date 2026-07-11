@@ -171,7 +171,7 @@
     var currentId = "";
     
     // =========================================================================
-    // CONFIGURAZIONE JSONBIN (Usa la Master Key qui!)
+    // CONFIGURAZIONE JSONBIN
     // =========================================================================
     var API_KEY = "$2a$10$NNi8R1qnzwGu64GesdAhaOF/x87LxLfTxK9flwDA7GVZZOqMSYqIK"; 
     var BIN_ID = "6a525173f5f4af5e2981100f"; 
@@ -179,7 +179,7 @@
 
     var territories = {
         "centro": { name: "Centro del Paese", top: "52%", left: "51%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
-        "kokei": { name: "K\u014dkei", top: "37%", left: "27%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
+        "kokei": { name: "Kōkei", top: "37%", left: "27%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
         "nord_verde": { name: "Territorio Nord Verde", top: "15%", left: "33%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
         "nord_marrone": { name: "Territorio Nord Marrone", top: "14%", left: "71%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
         "est_arancio": { name: "Territorio Est", top: "49%", left: "89%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
@@ -206,107 +206,19 @@
     });
 
     function scaricaDatabase() {
-        if (!BIN_ID) return; 
+        if (!BIN_ID || API_KEY === "INCOLLA_QUI_LA_TUA_MASTER_KEY") return; 
         var xhr = new XMLHttpRequest();
         xhr.open("GET", "https://api.jsonbin.io/v3/b/" + BIN_ID + "/latest", true);
         
-        // CORREZIONE: Ora usa X-Master-Key
         xhr.setRequestHeader("X-Master-Key", API_KEY);
         
         xhr.onreadystatechange = function () {
             if (xhr.readyState === 4 && xhr.status === 200) {
                 var res = JSON.parse(xhr.responseText);
                 if(res.record && Object.keys(res.record).length > 0) {
-                    territories = res.record;
-                }
-            }
-        };
-        xhr.send();
-    }
-
-    function salvaDatabase() {
-        if(!currentId || !BIN_ID) return;
-        
-        territories[currentId].storia = document.getElementById("t-storia").value;
-        territories[currentId].trama = document.getElementById("t-trama").value;
-        territories[currentId].indizi[0] = document.getElementById("c-1").value;
-        territories[currentId].indizi[1] = document.getElementById("c-2").value;
-        territories[currentId].indizi[2] = document.getElementById("c-3").value;
-        territories[currentId].indizi[3] = document.getElementById("c-4").value;
-
-        document.getElementById("gdr-save-btn").innerText = "🔄 SALVATAGGIO IN CORSO...";
-
-        var xhr = new XMLHttpRequest();
-        xhr.open("PUT", "https://api.jsonbin.io/v3/b/" + BIN_ID, true);
-        
-        xhr.setRequestHeader("Content-Type", "application/json");
-        // CORREZIONE: Ora usa X-Master-Key
-        xhr.setRequestHeader("X-Master-Key", API_KEY);
-        
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState === 4) {
-                if(xhr.status === 200) {
-                    alert("✨ Modifiche salvate nel database con successo!");
-                } else {
-                    alert("Errore di salvataggio. Codice errore di risposta: " + xhr.status);
-                }
-                document.getElementById("gdr-save-btn").innerText = "💾 SALVA MODIFICHE ONLINE";
-            }
-        };
-        xhr.send(JSON.stringify(territories));
-    }
-
-    function toggleMasterMode(){
-        isMasterMode = !isMasterMode;
-        document.getElementById("gdr-master-gear").style.opacity = isMasterMode ? "1" : "0.3";
-        document.getElementById("gdr-save-btn").style.display = isMasterMode ? "block" : "none";
-        
-        var fields = ["t-storia", "t-trama", "c-1", "c-2", "c-3", "c-4"];
-        fields.forEach(function(fId){
-            document.getElementById(fId).readOnly = !isMasterMode;
-        });
-        alert(isMasterMode ? "Pannello di Modifica Sbloccato!" : "Modalità Visualizzazione.");
-    }
-
-    function openModal(id){
-        currentId = id;
-        var t = territories[id];
-        document.getElementById("m-title").innerText = t.name;
-        document.getElementById("m-img").src = t.image;
-        document.getElementById("t-storia").value = t.storia || "";
-        document.getElementById("t-trama").value = t.trama || "";
-        document.getElementById("c-1").value = t.indizi[0] || "";
-        document.getElementById("c-2").value = t.indizi[1] || "";
-        document.getElementById("c-3").value = t.indizi[2] || "";
-        document.getElementById("c-4").value = t.indizi[3] || "";
-        switchTab("storia");
-        document.getElementById("loc-modal").classList.add("active");
-    }
-
-    function closeModal(){
-        document.getElementById("loc-modal").classList.remove("active");
-    }
-
-    function switchTab(tab){
-        var bS = document.getElementById("t-btn-storia");
-        var bT = document.getElementById("t-btn-trama");
-        var cS = document.getElementById("c-storia");
-        var cT = document.getElementById("c-trama");
-        if(tab === "storia"){
-            bS.classList.add("active"); bT.classList.remove("active");
-            cS.classList.add("active"); cT.classList.remove("active");
-        } else {
-            bT.classList.add("active"); bS.classList.remove("active");
-            cT.classList.add("active"); cS.classList.remove("active");
-        }
-    }
-
-    document.getElementById("gdr-master-gear").onclick = toggleMasterMode;
-    document.getElementById("modal-close-trigger").onclick = closeModal;
-    document.getElementById("t-btn-storia").onclick = function(){ switchTab("storia") };
-    document.getElementById("t-btn-trama").onclick = function(){ switchTab("trama") };
-    document.getElementById("gdr-save-btn").onclick = salvaDatabase;
-
-    scaricaDatabase();
-})();
-</script>
+                    // SISTEMATO: Uniamo le chiavi salvate senza distruggere la struttura base
+                    Object.keys(res.record).forEach(function(key) {
+                        if (territories[key]) {
+                            territories[key] = res.record[key];
+                        }
+                    });
