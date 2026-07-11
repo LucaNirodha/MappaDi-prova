@@ -9,18 +9,25 @@
     <div class="modal-content">
         <button class="close-btn" id="modal-close-trigger">Chiudi X</button>
         <div class="modal-header"><h2 id="m-title"></h2></div>
-        <img id="m-img" class="location-image" src="" alt="Luogo">
+        
         <div class="tabs">
             <button class="tab-btn active" id="t-btn-storia">STORIA</button>
             <button class="tab-btn" id="t-btn-trama">TRAMA</button>
         </div>
         
         <div id="c-storia" class="tab-content active">
-            <textarea class="storia-area" id="t-storia" placeholder="Storia..." readonly></textarea>
+            <div style="margin-bottom: 12px;">
+                <label style="display:block; font-weight:bold; margin-bottom:5px; color:var(--border-color); font-size:12px;">STORIA PRINCIPALE:</label>
+                <textarea class="storia-area" id="t-storia" placeholder="Storia..." readonly></textarea>
+            </div>
+            <div>
+                <label style="display:block; font-weight:bold; margin-bottom:5px; color:var(--border-color); font-size:12px;">DESCRIZIONE AMBIENTALE:</label>
+                <textarea class="ambiente-area" id="t-ambiente" placeholder="Descrizione dell'ambiente e del paesaggio..." readonly></textarea>
+            </div>
         </div>
         
         <div id="c-trama" class="tab-content">
-            <textarea class="trama-area" id="t-trama" placeholder="Trama..." readonly></textarea>
+            <textarea class="trama-area" id="t-trama" placeholder="Trama della quest..." readonly></textarea>
             <div class="clues-grid">
                 <textarea class="clue-box" id="c-1" placeholder="Indizio 1" readonly></textarea>
                 <textarea class="clue-box" id="c-2" placeholder="Indizio 2" readonly></textarea>
@@ -114,14 +121,6 @@
         padding-bottom: 10px;
         font-size: 24px;
     }
-    .location-image {
-        width: 100%;
-        height: 220px;
-        object-fit: cover;
-        border: 3px solid var(--border-color);
-        border-radius: 5px;
-        margin-bottom: 15px;
-    }
     .tabs {
         display: flex;
         gap: 10px;
@@ -153,7 +152,7 @@
         background-color: var(--bg-color);
         border: 2px solid var(--border-color);
         border-radius: 5px;
-        padding: 15px;
+        padding: 12px;
         font-family: inherit;
         font-size: 14px;
         resize: none;
@@ -161,10 +160,13 @@
         line-height: 1.4;
     }
     .storia-area {
-        height: 180px;
+        height: 130px;
+    }
+    .ambiente-area {
+        height: 130px;
     }
     .trama-area {
-        height: 110px;
+        height: 140px;
         margin-bottom: 12px;
     }
     .clues-grid {
@@ -190,15 +192,15 @@
     // =========================================================================
 
     var territories = {
-        "centro": { name: "Centro del Paese", top: "52%", left: "51%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
-        "kokei": { name: "Kōkei", top: "37%", left: "27%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
-        "nord_marrone": { name: "Territorio Nord Marrone", top: "14%", left: "65%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
-        "est_arancio": { name: "Territorio Est", top: "47%", left: "73%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
-        "sud_arancio": { name: "Territorio Sud", top: "83%", left: "50%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
-        "ovest_giallo": { name: "Territorio Ovest", top: "55%", left: "12%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
-        "bordo_nord_ovest": { name: "Confine Nord-Ovest", top: "13%", left: "12%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
-        "bordo_sud_ovest": { name: "Confine Sud-Ovest", top: "87%", left: "10%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
-        "bordo_sud_est": { name: "Confine Sud-Est", top: "88%", left: "70%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] }
+        "centro": { name: "Centro del Paese", top: "52%", left: "51%", storia: "", ambiente: "", trama: "", indizi: ["","","",""] },
+        "kokei": { name: "Kōkei", top: "37%", left: "27%", storia: "", ambiente: "", trama: "", indizi: ["","","",""] },
+        "nord_marrone": { name: "Territorio Nord Marrone", top: "14%", left: "65%", storia: "", ambiente: "", trama: "", indizi: ["","","",""] },
+        "est_arancio": { name: "Territorio Est", top: "47%", left: "73%", storia: "", ambiente: "", trama: "", indizi: ["","","",""] },
+        "sud_arancio": { name: "Territorio Sud", top: "83%", left: "50%", storia: "", ambiente: "", trama: "", indizi: ["","","",""] },
+        "ovest_giallo": { name: "Territorio Ovest", top: "55%", left: "12%", storia: "", ambiente: "", trama: "", indizi: ["","","",""] },
+        "bordo_nord_ovest": { name: "Confine Nord-Ovest", top: "13%", left: "12%", storia: "", ambiente: "", trama: "", indizi: ["","","",""] },
+        "bordo_sud_ovest": { name: "Confine Sud-Ovest", top: "87%", left: "10%", storia: "", ambiente: "", trama: "", indizi: ["","","",""] },
+        "bordo_sud_est": { name: "Confine Sud-Est", top: "88%", left: "70%", storia: "", ambiente: "", trama: "", indizi: ["","","",""] }
     };
 
     var container = document.getElementById("gdr-mappa-pioggia");
@@ -295,6 +297,7 @@
         
         if(currentId && territories[currentId]) {
             territories[currentId].storia = document.getElementById("t-storia").value;
+            territories[currentId].ambiente = document.getElementById("t-ambiente").value; // Salva descrizione ambientale
             territories[currentId].trama = document.getElementById("t-trama").value;
             territories[currentId].indizi[0] = document.getElementById("c-1").value;
             territories[currentId].indizi[1] = document.getElementById("c-2").value;
@@ -336,7 +339,7 @@
         document.getElementById("gdr-master-gear").style.opacity = isMasterMode ? "1" : "0.3";
         document.getElementById("gdr-save-btn").style.display = isMasterMode ? "block" : "none";
         
-        var fields = ["t-storia", "t-trama", "c-1", "c-2", "c-3", "c-4"];
+        var fields = ["t-storia", "t-ambiente", "t-trama", "c-1", "c-2", "c-3", "c-4"];
         fields.forEach(function(fId){
             document.getElementById(fId).readOnly = !isMasterMode;
         });
@@ -352,8 +355,8 @@
         currentId = id;
         var t = territories[id];
         document.getElementById("m-title").innerText = t.name;
-        document.getElementById("m-img").src = t.image;
         document.getElementById("t-storia").value = t.storia || "";
+        document.getElementById("t-ambiente").value = t.ambiente || ""; // Carica descrizione ambientale
         document.getElementById("t-trama").value = t.trama || "";
         document.getElementById("c-1").value = t.indizi[0] || "";
         document.getElementById("c-2").value = t.indizi[1] || "";
