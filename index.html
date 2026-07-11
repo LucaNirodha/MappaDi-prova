@@ -14,9 +14,11 @@
             <button class="tab-btn active" id="t-btn-storia">STORIA</button>
             <button class="tab-btn" id="t-btn-trama">TRAMA</button>
         </div>
+        
         <div id="c-storia" class="tab-content active">
             <textarea class="storia-area" id="t-storia" placeholder="Storia..." readonly></textarea>
         </div>
+        
         <div id="c-trama" class="tab-content">
             <textarea class="trama-area" id="t-trama" placeholder="Trama..." readonly></textarea>
             <div class="clues-grid">
@@ -25,8 +27,9 @@
                 <textarea class="clue-box" id="c-3" placeholder="Indizio 3" readonly></textarea>
                 <textarea class="clue-box" id="c-4" placeholder="Indizio 4" readonly></textarea>
             </div>
-            <button id="gdr-save-btn" style="width:100%; margin-top:15px; padding:10px; background-color:#2e7d32; color:white; border:2px solid #1b5e20; border-radius:5px; font-weight:bold; cursor:pointer; display:none;">💾 SALVA MODIFICHE ONLINE</button>
         </div>
+
+        <button id="gdr-save-btn" style="width:100%; margin-top:15px; padding:10px; background-color:#2e7d32; color:white; border:2px solid #1b5e20; border-radius:5px; font-weight:bold; cursor:pointer; display:none;">💾 SALVA MODIFICHE ONLINE</button>
     </div>
 </div>
 
@@ -217,11 +220,9 @@
             var rect = container.getBoundingClientRect();
 
             function onMouseMove(moveEvent) {
-                // Calcoliamo la distanza del movimento
                 var movementX = Math.abs(moveEvent.clientX - e.clientX);
                 var movementY = Math.abs(moveEvent.clientY - e.clientY);
                 
-                // Se si sposta di più di 4 pixel, è un trascinamento vero e proprio
                 if (movementX > 4 || movementY > 4) {
                     isDragging = true;
                 }
@@ -252,7 +253,6 @@
         };
 
         btn.onclick = function(){ 
-            // Permette l'apertura se non stavamo trascinando il tasto
             if (!isDragging) {
                 openModal(id); 
             }
