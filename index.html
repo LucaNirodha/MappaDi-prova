@@ -52,14 +52,20 @@
         color: white;
         text-shadow: 1px 1px 2px black;
         box-shadow: 0 4px 8px rgba(0,0,0,0.5);
-        transition: all 0.2s ease;
+        transition: background-color 0.2s ease, box-shadow 0.2s ease;
         z-index: 10;
         white-space: nowrap;
+        user-select: none;
     }
     .territory-btn:hover {
         background-color: var(--primary-brown);
-        transform: translate(-50%, -50%) scale(1.1);
         box-shadow: 0 6px 12px rgba(0,0,0,0.7);
+    }
+    .territory-btn.draggable-active {
+        cursor: move;
+        background-color: #1565c0 !important;
+        border-color: #0d47a1;
+        z-index: 100;
     }
     .modal-overlay {
         display: none;
@@ -180,7 +186,6 @@
     var BIN_ID = "6a525173f5f4af5e2981100f"; 
     // =========================================================================
 
-    // Gestione pulita con gli 8 territori definitivi calibrati per non uscire dai bordi
     var territories = {
         "centro": { name: "Centro del Paese", top: "52%", left: "51%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
         "kokei": { name: "Kōkei", top: "37%", left: "27%", image: "https://via.placeholder.com/600x220", storia: "", trama: "", indizi: ["","","",""] },
@@ -195,6 +200,7 @@
 
     var container = document.getElementById("gdr-mappa-pioggia");
     
+    // Generazione dei bottoni con supporto Drag and Drop integrato
     Object.keys(territories).forEach(function(id){
         var t = territories[id];
         var btn = document.createElement("button");
@@ -202,7 +208,51 @@
         btn.innerText = t.name;
         btn.style.top = t.top;
         btn.style.left = t.left;
-        btn.onclick = function(){ openModal(id) };
+        
+        // Logica click / trascinamento differenziata
+        var isDragging = false;
+
+        btn.onmousedown = function(e) {
+            if (!isMasterMode) return; // Permesso solo ai Master
+            isDragging = false;
+            btn.classList.add("draggable-active");
+
+            var rect = container.getBoundingClientRect();
+
+            function onMouseMove(moveEvent) {
+                isDragging = true;
+                // Calcola le percentuali in tempo reale sul movimento del mouse
+                var x = moveEvent.clientX - rect.left;
+                var y = moveEvent.clientY - rect.top;
+                
+                var pctX = Math.min(Math.max((x / rect.width) * 100, 0), 100);
+                var pctY = Math.min(Math.max((y / rect.height) * 100, 0), 100);
+
+                btn.style.left = pctX.toFixed(1) + "%";
+                btn.style.top = pctY.toFixed(1) + "%";
+
+                // Salva temporaneamente le nuove coordinate nell'oggetto locale
+                territories[id].left = btn.style.left;
+                territories[id].top = btn.style.top;
+            }
+
+            function onMouseUp() {
+                btn.classList.remove("draggable-active");
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            }
+
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        };
+
+        btn.onclick = function(){ 
+            // Apri la scheda solo se non stavi trascinando e non sei in modalità Master
+            if (!isDragging) {
+                openModal(id); 
+            }
+        };
+        
         container.appendChild(btn);
     });
 
@@ -217,10 +267,17 @@
             if (xhr.readyState === 4 && xhr.status === 200) {
                 var res = JSON.parse(xhr.responseText);
                 if(res.record && res.record.centro) {
-                    // Sincronizza solo gli 8 territori attivi per non ricaricare quelli vecchi dal database online
                     Object.keys(res.record).forEach(function(key) {
                         if (territories[key]) {
                             territories[key] = res.record[key];
+                            // Applica subito le coordinate scaricate dal database ai bottoni fisici
+                            var btnElement = Array.from(container.getElementsByClassName("territory-btn")).find(function(b) {
+                                return b.innerText === territories[key].name;
+                            });
+                            if (btnElement) {
+                                btnElement.style.top = territories[key].top;
+                                btnElement.style.left = territories[key].left;
+                            }
                         }
                     });
                 }
@@ -230,14 +287,17 @@
     }
 
     function salvaDatabase() {
-        if(!currentId || !BIN_ID) return;
+        if(!BIN_ID) return;
         
-        territories[currentId].storia = document.getElementById("t-storia").value;
-        territories[currentId].trama = document.getElementById("t-trama").value;
-        territories[currentId].indizi[0] = document.getElementById("c-1").value;
-        territories[currentId].indizi[1] = document.getElementById("c-2").value;
-        territories[currentId].indizi[2] = document.getElementById("c-3").value;
-        territories[currentId].indizi[3] = document.getElementById("c-4").value;
+        // Se stiamo modificando un territorio specifico, aggiorna prima i suoi testi
+        if(currentId && territories[currentId]) {
+            territories[currentId].storia = document.getElementById("t-storia").value;
+            territories[currentId].trama = document.getElementById("t-trama").value;
+            territories[currentId].indizi[0] = document.getElementById("c-1").value;
+            territories[currentId].indizi[1] = document.getElementById("c-2").value;
+            territories[currentId].indizi[2] = document.getElementById("c-3").value;
+            territories[currentId].indizi[3] = document.getElementById("c-4").value;
+        }
 
         document.getElementById("gdr-save-btn").innerText = "🔄 SALVATAGGIO IN CORSO...";
 
@@ -250,7 +310,7 @@
         xhr.onreadystatechange = function () {
             if (xhr.readyState === 4) {
                 if(xhr.status === 200) {
-                    alert("✨ Modifiche salvate nel database con successo!");
+                    alert("✨ Modifiche e nuove posizioni salvate nel database!");
                 } else {
                     alert("Errore di salvataggio. Codice errore di risposta: " + xhr.status);
                 }
@@ -278,10 +338,18 @@
             document.getElementById(fId).readOnly = !isMasterMode;
         });
         
-        alert(isMasterMode ? "🔓 Pannello di Modifica Sbloccato!" : "🔒 Mappa bloccata. Modalità Visualizzazione.");
+        // Cambia colore temporaneamente ai bottoni per far capire che sono pronti al trascinamento
+        Array.from(container.getElementsByClassName("territory-btn")).forEach(function(b) {
+            b.style.backgroundColor = isMasterMode ? "rgba(21, 101, 192, 0.85)" : "rgba(139,90,51,0.85)";
+        });
+
+        alert(isMasterMode ? "🔓 Modalità modifica attiva: ora puoi TRASCINARE i pulsanti sulla mappa con il mouse!" : "🔒 Mappa bloccata. Modalità Visualizzazione.");
     }
     
     function openModal(id){
+        // In modalità master, impedisce l'apertura immediata della scheda per dare priorità allo spostamento
+        if(isMasterMode) return; 
+
         currentId = id;
         var t = territories[id];
         document.getElementById("m-title").innerText = t.name;
