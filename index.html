@@ -12,10 +12,10 @@
             <button class="tab-btn" id="t-btn-trama">TRAMA</button>
         </div>
         <div id="c-storia" class="tab-content active">
-            <textarea class="storia-area" id="t-storia" placeholder="Storia" readonly></textarea>
+            <textarea class="storia-area" id="t-storia" placeholder="Caricamento in corso..." readonly></textarea>
         </div>
         <div id="c-trama" class="tab-content">
-            <textarea class="trama-area" id="t-trama" placeholder="Trama" readonly></textarea>
+            <textarea class="trama-area" id="t-trama" placeholder="Caricamento in corso..." readonly></textarea>
             <div class="clues-grid">
                 <textarea class="clue-box" id="c-1" placeholder="Indizio 1" readonly></textarea>
                 <textarea class="clue-box" id="c-2" placeholder="Indizio 2" readonly></textarea>
@@ -166,23 +166,27 @@
 <script>
 (function(){
     var currentId = "";
+    var dynamicTexts = {};
+
+    // Struttura fissa delle posizioni dei pulsanti grafici
     var territories = {
-        "centro": {name:"Centro del Paese", top:"52%", left:"51%", image:"https://via.placeholder.com/600x220", storia:"La zona centrale del Paese della Pioggia...", trama:"Inserisci qui la trama...", indizi:["","","",""]},
-        "kokei": {name:"Kōkei", top:"37%", left:"27%", image:"https://via.placeholder.com/600x220", storia:"Kōkei è un avamposto roccioso strategico...", trama:"I giocatori devono indagare sui sabotaggi...", indizi:["Un vecchio medaglione spezzato.","Tracce di polvere da sparo insolita.","La lettera cifrata di una spia.","Impronte di stivali pesanti dirette a nord."]},
-        "nord_verde": {name:"Territorio Nord Verde", top:"15%", left:"33%", image:"https://via.placeholder.com/600x220", storia:"Storia", trama:"Trama", indizi:["","","",""]},
-        "nord_marrone": {name:"Territorio Nord Marrone", top:"14%", left:"71%", image:"https://via.placeholder.com/600x220", storia:"Storia", trama:"Trama", indizi:["","","",""]},
-        "est_arancio": {name:"Territorio Est", top:"49%", left:"89%", image:"https://via.placeholder.com/600x220", storia:"Storia", trama:"Trama", indizi:["","","",""]},
-        "sud_arancio": {name:"Territorio Sud", top:"88%", left:"50%", image:"https://via.placeholder.com/600x220", storia:"Storia", trama:"Trama", indizi:["","","",""]},
-        "ovest_giallo": {name:"Territorio Ovest", top:"58%", left:"10%", image:"https://via.placeholder.com/600x220", storia:"Storia", trama:"Trama", indizi:["","","",""]},
-        "bordo_nord_ovest": {name:"Confine Nord-Ovest", top:"13%", left:"9%", image:"https://via.placeholder.com/600x220", storia:"Storia", trama:"Trama", indizi:["","","",""]},
-        "bordo_nord": {name:"Terre del Nord", top:"2%", left:"50%", image:"https://via.placeholder.com/600x220", storia:"Storia", trama:"Trama", indizi:["","","",""]},
-        "bordo_est": {name:"Terre dell'Est", top:"45%", left:"98%", image:"https://via.placeholder.com/600x220", storia:"Storia", trama:"Trama", indizi:["","","",""]},
-        "bordo_sud_ovest": {name:"Confine Sud-Ovest", top:"92%", left:"8px", image:"https://via.placeholder.com/600x220", storia:"Storia", trama:"Trama", indizi:["","","",""]},
-        "bordo_sud_est": {name:"Confine Sud-Est", top:"93%",left:"86%", image:"https://via.placeholder.com/600x220", storia:"Storia", trama:"Trama", indizi:["","","",""]}
+        "centro": { name: "Centro del Paese", top: "52%", left: "51%", image: "https://via.placeholder.com/600x220" },
+        "kokei": { name: "Kōkei", top: "37%", left: "27%", image: "https://via.placeholder.com/600x220" },
+        "nord_verde": { name: "Territorio Nord Verde", top: "15%", left: "33%", image: "https://via.placeholder.com/600x220" },
+        "nord_marrone": { name: "Territorio Nord Marrone", top: "14%", left: "71%", image: "https://via.placeholder.com/600x220" },
+        "est_arancio": { name: "Territorio Est", top: "49%", left: "89%", image: "https://via.placeholder.com/600x220" },
+        "sud_arancio": { name: "Territorio Sud", top: "88%", left: "50%", image: "https://via.placeholder.com/600x220" },
+        "ovest_giallo": { name: "Territorio Ovest", top: "58%", left: "10%", image: "https://via.placeholder.com/600x220" },
+        "bordo_nord_ovest": { name: "Confine Nord-Ovest", top: "13%", left: "9%", image: "https://via.placeholder.com/600x220" },
+        "bordo_nord": { name: "Terre del Nord", top: "2%", left: "50%", image: "https://via.placeholder.com/600x220" },
+        "bordo_est": { name: "Terre dell'Est", top: "45%", left: "98%", image: "https://via.placeholder.com/600x220" },
+        "bordo_sud_ovest": { name: "Confine Sud-Ovest", top: "92%", left: "8px", image: "https://via.placeholder.com/600x220" },
+        "bordo_sud_est": { name: "Confine Sud-Est", top: "93%", left: "86%", image: "https://via.placeholder.com/600x220" }
     };
 
     var container = document.getElementById("gdr-mappa-pioggia");
     
+    // Genera i pulsanti sulla mappa
     Object.keys(territories).forEach(function(id){
         var t = territories[id];
         var btn = document.createElement("button");
@@ -194,17 +198,36 @@
         container.appendChild(btn);
     });
 
+    // Scarica i testi dal file JSON esterno
+    function caricaTesti() {
+        var url = "dati.json";
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", url, true);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                try {
+                    dynamicTexts = JSON.parse(xhr.responseText);
+                } catch(e) {
+                    console.error("Errore nel formato del file dati.json");
+                }
+            }
+        };
+        xhr.send();
+    }
+
     function openModal(id){
         currentId = id;
         var t = territories[id];
+        var info = dynamicTexts[id] || { storia: "", trama: "", indizi: ["","","",""] };
+        
         document.getElementById("m-title").innerText = t.name;
         document.getElementById("m-img").src = t.image;
-        document.getElementById("t-storia").value = t.storia;
-        document.getElementById("t-trama").value = t.trama;
-        document.getElementById("c-1").value = t.indizi[0] || "";
-        document.getElementById("c-2").value = t.indizi[1] || "";
-        document.getElementById("c-3").value = t.indizi[2] || "";
-        document.getElementById("c-4").value = t.indizi[3] || "";
+        document.getElementById("t-storia").value = info.storia || "Nessun testo inserito.";
+        document.getElementById("t-trama").value = info.trama || "";
+        document.getElementById("c-1").value = info.indizi && info.indizi[0] ? info.indizi[0] : "";
+        document.getElementById("c-2").value = info.indizi && info.indizi[1] ? info.indizi[1] : "";
+        document.getElementById("c-3").value = info.indizi && info.indizi[2] ? info.indizi[2] : "";
+        document.getElementById("c-4").value = info.indizi && info.indizi[3] ? info.indizi[3] : "";
         switchTab("storia");
         document.getElementById("loc-modal").classList.add("active");
     }
@@ -230,5 +253,7 @@
     document.getElementById("modal-close-trigger").onclick = closeModal;
     document.getElementById("t-btn-storia").onclick = function(){ switchTab("storia") };
     document.getElementById("t-btn-trama").onclick = function(){ switchTab("trama") };
+    
+    caricaTesti();
 })();
 </script>
