@@ -255,7 +255,19 @@
         xhr.send(JSON.stringify(territories));
     }
 
-    function toggleMasterMode(){
+   function toggleMasterMode(){
+        // Se stiamo cercando di sbloccare la gestione, chiediamo la password
+        if (!isMasterMode) {
+            var password = prompt("Inserisci la password:");
+            
+            // Sostituisci "Master123" con la vera password che vuoi dare ai gestori
+            if (password !== "NNRFATI1") {
+                alert("❌ Password errata! Non sei autorizzato.");
+                return; // Ferma tutto, non sblocca la mappa
+            }
+        }
+
+        // Se la password è giusta (o se stiamo semplicemente richiudendo la gestione)
         isMasterMode = !isMasterMode;
         document.getElementById("gdr-master-gear").style.opacity = isMasterMode ? "1" : "0.3";
         document.getElementById("gdr-save-btn").style.display = isMasterMode ? "block" : "none";
@@ -264,9 +276,9 @@
         fields.forEach(function(fId){
             document.getElementById(fId).readOnly = !isMasterMode;
         });
-        alert(isMasterMode ? "Pannello di Modifica Sbloccato!" : "Modalità Visualizzazione.");
+        
+        alert(isMasterMode ? "🔓 Pannello di Modifica Sbloccato!" : "🔒 Mappa bloccata. Modalità Visualizzazione.");
     }
-
     function openModal(id){
         currentId = id;
         var t = territories[id];
