@@ -1,7 +1,10 @@
 <div style="display: flex; justify-content: center; align-items: center; width: 100%; padding: 15px 0;">
     <div id="gdr-mappa-pioggia" style="display:inline-block; position:relative; width: 75vw; height: 90vh;">
-        <img src="https://i.imgur.com/GmBpgEG.png" alt="Mappa" style="display:block; width:100%; height:100%; object-fit:fill; border:4px solid #6a4625; border-radius:4px; box-shadow:0 10px 30px rgba(0,0,0,0.7);">
+        <img id="sfondo-mappa" src="https://i.imgur.com/GmBpgEG.png" alt="Mappa" style="display:block; width:100%; height:100%; object-fit:fill; border:4px solid #6a4625; border-radius:4px; box-shadow:0 10px 30px rgba(0,0,0,0.7);">
+        
         <button id="gdr-master-gear" style="position:absolute; top:15px; right:15px; background:none; border:none; font-size:24px; cursor:pointer; z-index:100; opacity:0.3; text-shadow: 0 0 5px rgba(255,255,255,0.8);">⚙️ Gestione</button>
+        
+        <button id="gdr-change-map-btn" style="position:absolute; top:55px; right:15px; background:rgba(21, 101, 192, 0.85); color:white; border:2px solid #0d47a1; border-radius:5px; padding:6px 12px; font-weight:bold; cursor:pointer; z-index:100; display:none; box-shadow:0 4px 8px rgba(0,0,0,0.5);">🖼️ Cambia Sfondo</button>
     </div>
 </div>
 
@@ -273,8 +276,16 @@
         xhr.onreadystatechange = function () {
             if (xhr.readyState === 4 && xhr.status === 200) {
                 var res = JSON.parse(xhr.responseText);
-                if(res.record && res.record.centro) {
+                if(res.record) {
+                    // Controlla se c'è un'immagine di sfondo salvata
+                    if (res.record._config && res.record._config.mapUrl) {
+                        document.getElementById("sfondo-mappa").src = res.record._config.mapUrl;
+                        territories["_config"] = res.record._config;
+                    }
+                    
                     Object.keys(res.record).forEach(function(key) {
+                        if (key === "_config") return; // Salta la configurazione speciale
+                        
                         if (territories[key]) {
                             territories[key] = res.record[key];
                             var btnElement = Array.from(container.getElementsByClassName("territory-btn")).find(function(b) {
@@ -292,12 +303,12 @@
         xhr.send();
     }
 
-    function salvaDatabase() {
+    function salvaDatabase(isBackgroundChange = false) {
         if(!BIN_ID) return;
         
-        if(currentId && territories[currentId]) {
+        if(!isBackgroundChange && currentId && territories[currentId]) {
             territories[currentId].storia = document.getElementById("t-storia").value;
-            territories[currentId].ambiente = document.getElementById("t-ambiente").value; // Salva descrizione ambientale
+            territories[currentId].ambiente = document.getElementById("t-ambiente").value;
             territories[currentId].trama = document.getElementById("t-trama").value;
             territories[currentId].indizi[0] = document.getElementById("c-1").value;
             territories[currentId].indizi[1] = document.getElementById("c-2").value;
@@ -305,7 +316,9 @@
             territories[currentId].indizi[3] = document.getElementById("c-4").value;
         }
 
-        document.getElementById("gdr-save-btn").innerText = "🔄 SALVATAGGIO IN CORSO...";
+        var btnUI = isBackgroundChange ? document.getElementById("gdr-change-map-btn") : document.getElementById("gdr-save-btn");
+        var originalText = btnUI.innerText;
+        btnUI.innerText = "🔄 SALVATAGGIO...";
 
         var xhr = new XMLHttpRequest();
         xhr.open("PUT", "https://api.jsonbin.io/v3/b/" + BIN_ID, true);
@@ -316,11 +329,11 @@
         xhr.onreadystatechange = function () {
             if (xhr.readyState === 4) {
                 if(xhr.status === 200) {
-                    alert("✨ Modifiche e nuove posizioni salvate nel database!");
+                    if(!isBackgroundChange) alert("✨ Modifiche e nuove posizioni salvate nel database!");
                 } else {
                     alert("Errore di salvataggio. Codice errore di risposta: " + xhr.status);
                 }
-                document.getElementById("gdr-save-btn").innerText = "💾 SALVA MODIFICHE ONLINE";
+                btnUI.innerText = originalText;
             }
         };
         xhr.send(JSON.stringify(territories));
@@ -338,6 +351,7 @@
         isMasterMode = !isMasterMode;
         document.getElementById("gdr-master-gear").style.opacity = isMasterMode ? "1" : "0.3";
         document.getElementById("gdr-save-btn").style.display = isMasterMode ? "block" : "none";
+        document.getElementById("gdr-change-map-btn").style.display = isMasterMode ? "block" : "none";
         
         var fields = ["t-storia", "t-ambiente", "t-trama", "c-1", "c-2", "c-3", "c-4"];
         fields.forEach(function(fId){
@@ -348,7 +362,7 @@
             b.style.backgroundColor = isMasterMode ? "rgba(21, 101, 192, 0.85)" : "rgba(139,90,51,0.85)";
         });
 
-        alert(isMasterMode ? "🔓 Modalità modifica attiva: Trascina i pulsanti per spostarli, o cliccali normalmente per modificare i testi delle schede!" : "🔒 Mappa bloccata. Modalità Visualizzazione.");
+        alert(isMasterMode ? "🔓 Modalità modifica attiva: Trascina i pulsanti per spostarli, cliccali per i testi o usa 'Cambia Sfondo' per sostituire la mappa!" : "🔒 Mappa bloccata. Modalità Visualizzazione.");
     }
     
     function openModal(id){
@@ -356,7 +370,7 @@
         var t = territories[id];
         document.getElementById("m-title").innerText = t.name;
         document.getElementById("t-storia").value = t.storia || "";
-        document.getElementById("t-ambiente").value = t.ambiente || ""; // Carica descrizione ambientale
+        document.getElementById("t-ambiente").value = t.ambiente || ""; 
         document.getElementById("t-trama").value = t.trama || "";
         document.getElementById("c-1").value = t.indizi[0] || "";
         document.getElementById("c-2").value = t.indizi[1] || "";
@@ -384,11 +398,27 @@
         }
     }
 
+    // Gestione cambio mappa rapido
+    document.getElementById("gdr-change-map-btn").onclick = function() {
+        var currentSrc = document.getElementById("sfondo-mappa").src;
+        var newUrl = prompt("Inserisci il link diretto alla nuova immagine della mappa (es. da Imgur):", currentSrc);
+        
+        if (newUrl && newUrl !== currentSrc) {
+            document.getElementById("sfondo-mappa").src = newUrl;
+            if (!territories["_config"]) territories["_config"] = {};
+            territories["_config"].mapUrl = newUrl;
+            
+            // Salva istantaneamente la modifica nel database
+            salvaDatabase(true);
+            alert("🖼️ Mappa aggiornata e salvata per tutti i giocatori!");
+        }
+    };
+
     document.getElementById("gdr-master-gear").onclick = toggleMasterMode;
     document.getElementById("modal-close-trigger").onclick = closeModal;
     document.getElementById("t-btn-storia").onclick = function(){ switchTab("storia") };
     document.getElementById("t-btn-trama").onclick = function(){ switchTab("trama") };
-    document.getElementById("gdr-save-btn").onclick = salvaDatabase;
+    document.getElementById("gdr-save-btn").onclick = function() { salvaDatabase(false); };
 
     scaricaDatabase();
 })();
