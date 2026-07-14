@@ -10,6 +10,13 @@
         <button class="close-btn" id="modal-close-trigger">Chiudi X</button>
         <div class="modal-header"><h2 id="m-title"></h2></div>
         
+        <div id="editor-toolbar" class="editor-toolbar" style="display: none;">
+            <span style="font-size: 12px; color: white; display: flex; align-items: center; margin-right: 10px;">FORMATTAZIONE:</span>
+            <button class="tool-btn" onmousedown="event.preventDefault(); document.execCommand('bold', false, null)"><b>B</b> Grassetto</button>
+            <button class="tool-btn" onmousedown="event.preventDefault(); window.changeFontSize(1)">A+ Ingrandisci</button>
+            <button class="tool-btn" onmousedown="event.preventDefault(); window.changeFontSize(-1)">A- Rimpicciolisci</button>
+        </div>
+        
         <div class="tabs">
             <button class="tab-btn active" id="t-btn-storia">STORIA</button>
             <button class="tab-btn" id="t-btn-trama">TRAMA</button>
@@ -18,21 +25,28 @@
         <div id="c-storia" class="tab-content active">
             <div style="margin-bottom: 12px;">
                 <label style="display:block; font-weight:bold; margin-bottom:5px; color:var(--border-color); font-size:12px;">STORIA PRINCIPALE:</label>
-                <textarea class="storia-area" id="t-storia" placeholder="Storia..." readonly></textarea>
+                <div class="rich-textarea storia-area" id="t-storia" contenteditable="false" placeholder="Storia..."></div>
             </div>
             <div>
                 <label style="display:block; font-weight:bold; margin-bottom:5px; color:var(--border-color); font-size:12px;">DESCRIZIONE AMBIENTALE:</label>
-                <textarea class="ambiente-area" id="t-ambiente" placeholder="Descrizione dell'ambiente e del paesaggio..." readonly></textarea>
+                <div class="rich-textarea ambiente-area" id="t-ambiente" contenteditable="false" placeholder="Descrizione dell'ambiente e del paesaggio..."></div>
             </div>
         </div>
         
         <div id="c-trama" class="tab-content">
-            <textarea class="trama-area" id="t-trama" placeholder="Trama della quest..." readonly></textarea>
-            <div class="clues-grid">
-                <textarea class="clue-box" id="c-1" placeholder="Indizio 1" readonly></textarea>
-                <textarea class="clue-box" id="c-2" placeholder="Indizio 2" readonly></textarea>
-                <textarea class="clue-box" id="c-3" placeholder="Indizio 3" readonly></textarea>
-                <textarea class="clue-box" id="c-4" placeholder="Indizio 4" readonly></textarea>
+            <div style="margin-bottom: 12px;">
+                <label style="display:block; font-weight:bold; margin-bottom:5px; color:var(--border-color); font-size:12px;">TRAMA DELLA QUEST:</label>
+                <div class="rich-textarea trama-area" id="t-trama" contenteditable="false" placeholder="Trama principale della quest..."></div>
+            </div>
+            <div>
+                <label style="display:block; font-weight:bold; margin-bottom:5px; color:var(--border-color); font-size:12px;">INDIZI SULLA ZONA (Clicca per leggere, modifica nome in modalità Gestione):</label>
+                <div class="clue-tabs">
+                    <div class="clue-btn active" data-index="0" contenteditable="false">Indizio 1</div>
+                    <div class="clue-btn" data-index="1" contenteditable="false">Indizio 2</div>
+                    <div class="clue-btn" data-index="2" contenteditable="false">Indizio 3</div>
+                    <div class="clue-btn" data-index="3" contenteditable="false">Indizio 4</div>
+                </div>
+                <div class="rich-textarea active-clue-area" id="t-active-clue" contenteditable="false" placeholder="Seleziona un indizio..."></div>
             </div>
         </div>
 
@@ -91,8 +105,8 @@
     }
     .modal-content {
         background-color: var(--modal-bg);
-        width: 600px;
-        max-width: 90%;
+        width: 900px;
+        max-width: 95%;
         border: 4px solid var(--border-color);
         border-radius: 8px;
         padding: 20px;
@@ -119,8 +133,31 @@
         color: var(--border-color);
         border-bottom: 2px solid var(--border-color);
         padding-bottom: 10px;
-        font-size: 24px;
+        font-size: 28px;
     }
+    
+    /* Toolbar Editor */
+    .editor-toolbar {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 15px;
+        background: var(--secondary-brown);
+        padding: 8px;
+        border-radius: 5px;
+        border: 2px solid var(--border-color);
+    }
+    .tool-btn {
+        background: var(--bg-color);
+        border: 1px solid var(--border-color);
+        padding: 4px 8px;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 13px;
+        color: var(--text-dark);
+        transition: background-color 0.2s;
+    }
+    .tool-btn:hover { background: #fff; }
+
     .tabs {
         display: flex;
         gap: 10px;
@@ -146,7 +183,9 @@
     .tab-content.active {
         display: block;
     }
-    textarea {
+    
+    /* Stili per il box di testo modificabile */
+    .rich-textarea {
         width: 100%;
         box-sizing: border-box;
         background-color: var(--bg-color);
@@ -155,52 +194,96 @@
         padding: 12px;
         font-family: inherit;
         font-size: 14px;
-        resize: none;
         color: var(--text-dark);
         line-height: 1.4;
+        overflow-y: auto;
+        white-space: normal;
     }
-    .storia-area {
-        height: 130px;
+    /* Comportamento in modalità master */
+    .rich-textarea[contenteditable="true"] {
+        background-color: #faf8f2;
+        outline: 2px solid #2e7d32;
+        box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
     }
-    .ambiente-area {
-        height: 130px;
+    .rich-textarea:empty:before {
+        content: attr(placeholder);
+        color: #999;
+        font-style: italic;
     }
-    .trama-area {
-        height: 140px;
-        margin-bottom: 12px;
+    
+    /* Altezze maggiorate */
+    .storia-area { height: 180px; }
+    .ambiente-area { height: 180px; }
+    .trama-area { height: 150px; }
+    .active-clue-area { height: 200px; }
+    
+    .clue-tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 8px;
     }
-    .clues-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
+    .clue-btn {
+        flex: 1;
+        padding: 10px 4px;
+        background-color: var(--secondary-brown);
+        border: 2px solid var(--border-color);
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+        color: white;
+        font-size: 13px;
+        text-align: center;
+        transition: background-color 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 20px;
     }
-    .clue-box {
-        height: 70px;
+    .clue-btn:hover { background-color: var(--primary-brown); }
+    .clue-btn.active {
+        background-color: var(--primary-brown);
+        box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+    }
+    .clue-btn[contenteditable="true"] {
+        background-color: #faf8f2;
+        color: var(--text-dark);
+        outline: 2px solid #2e7d32;
     }
 </style>
 
 <script>
+// Funzione globale per cambiare gradualmente la dimensione del testo
+window.changeFontSize = function(step) {
+    var currentSize = document.queryCommandValue('fontSize');
+    var parsedSize = parseInt(currentSize);
+    if (isNaN(parsedSize)) {
+        parsedSize = 3; // Dimensione standard HTML (circa 16px) se non ne ha una assegnata
+    }
+    var newSize = Math.max(1, Math.min(7, parsedSize + step)); // Limita tra 1 (piccolissimo) e 7 (enorme)
+    document.execCommand('fontSize', false, newSize);
+};
+
 (function(){
     var isMasterMode = false;
     var currentId = "";
+    var currentClueIndex = 0; 
     
     // =========================================================================
     // CONFIGURAZIONE CREDENZIALI
-    // =========================================================================
     var API_KEY = "$2a$10$NNi8R1qnzwGu64GesdAhaOF/x87LxLfTxK9flwDA7GVZZOqMSYqIK"; 
     var BIN_ID = "6a525173f5f4af5e2981100f"; 
     // =========================================================================
 
     var territories = {
-        "centro": { name: "Centro del Paese", top: "52%", left: "51%", storia: "", ambiente: "", trama: "", indizi: ["","","",""] },
-        "kokei": { name: "Kōkei", top: "37%", left: "27%", storia: "", ambiente: "", trama: "", indizi: ["","","",""] },
-        "nord_marrone": { name: "Territorio Nord Marrone", top: "14%", left: "65%", storia: "", ambiente: "", trama: "", indizi: ["","","",""] },
-        "est_arancio": { name: "Territorio Est", top: "47%", left: "73%", storia: "", ambiente: "", trama: "", indizi: ["","","",""] },
-        "sud_arancio": { name: "Territorio Sud", top: "83%", left: "50%", storia: "", ambiente: "", trama: "", indizi: ["","","",""] },
-        "ovest_giallo": { name: "Territorio Ovest", top: "55%", left: "12%", storia: "", ambiente: "", trama: "", indizi: ["","","",""] },
-        "bordo_nord_ovest": { name: "Confine Nord-Ovest", top: "13%", left: "12%", storia: "", ambiente: "", trama: "", indizi: ["","","",""] },
-        "bordo_sud_ovest": { name: "Confine Sud-Ovest", top: "87%", left: "10%", storia: "", ambiente: "", trama: "", indizi: ["","","",""] },
-        "bordo_sud_est": { name: "Confine Sud-Est", top: "88%", left: "70%", storia: "", ambiente: "", trama: "", indizi: ["","","",""] }
+        "centro": { name: "Centro del Paese", top: "52%", left: "51%", storia: "", ambiente: "", trama: "", indizi: ["","","",""], indizi_nomi: ["","","",""] },
+        "kokei": { name: "Kōkei", top: "37%", left: "27%", storia: "", ambiente: "", trama: "", indizi: ["","","",""], indizi_nomi: ["","","",""] },
+        "nord_marrone": { name: "Territorio Nord Marrone", top: "14%", left: "65%", storia: "", ambiente: "", trama: "", indizi: ["","","",""], indizi_nomi: ["","","",""] },
+        "est_arancio": { name: "Territorio Est", top: "47%", left: "73%", storia: "", ambiente: "", trama: "", indizi: ["","","",""], indizi_nomi: ["","","",""] },
+        "sud_arancio": { name: "Territorio Sud", top: "83%", left: "50%", storia: "", ambiente: "", trama: "", indizi: ["","","",""], indizi_nomi: ["","","",""] },
+        "ovest_giallo": { name: "Territorio Ovest", top: "55%", left: "12%", storia: "", ambiente: "", trama: "", indizi: ["","","",""], indizi_nomi: ["","","",""] },
+        "bordo_nord_ovest": { name: "Confine Nord-Ovest", top: "13%", left: "12%", storia: "", ambiente: "", trama: "", indizi: ["","","",""], indizi_nomi: ["","","",""] },
+        "bordo_sud_ovest": { name: "Confine Sud-Ovest", top: "87%", left: "10%", storia: "", ambiente: "", trama: "", indizi: ["","","",""], indizi_nomi: ["","","",""] },
+        "bordo_sud_est": { name: "Confine Sud-Est", top: "88%", left: "70%", storia: "", ambiente: "", trama: "", indizi: ["","","",""], indizi_nomi: ["","","",""] }
     };
 
     var container = document.getElementById("gdr-mappa-pioggia");
@@ -225,14 +308,11 @@
                 var movementX = Math.abs(moveEvent.clientX - e.clientX);
                 var movementY = Math.abs(moveEvent.clientY - e.clientY);
                 
-                if (movementX > 4 || movementY > 4) {
-                    isDragging = true;
-                }
+                if (movementX > 4 || movementY > 4) { isDragging = true; }
 
                 if (isDragging) {
                     var x = moveEvent.clientX - rect.left;
                     var y = moveEvent.clientY - rect.top;
-                    
                     var pctX = Math.min(Math.max((x / rect.width) * 100, 0), 100);
                     var pctY = Math.min(Math.max((y / rect.height) * 100, 0), 100);
 
@@ -255,9 +335,7 @@
         };
 
         btn.onclick = function(){ 
-            if (!isDragging) {
-                openModal(id); 
-            }
+            if (!isDragging) { openModal(id); }
         };
         
         container.appendChild(btn);
@@ -267,7 +345,6 @@
         if (!BIN_ID) return; 
         var xhr = new XMLHttpRequest();
         xhr.open("GET", "https://api.jsonbin.io/v3/b/" + BIN_ID + "/latest", true);
-        
         xhr.setRequestHeader("X-Master-Key", API_KEY);
         
         xhr.onreadystatechange = function () {
@@ -296,27 +373,32 @@
         if(!BIN_ID) return;
         
         if(currentId && territories[currentId]) {
-            territories[currentId].storia = document.getElementById("t-storia").value;
-            territories[currentId].ambiente = document.getElementById("t-ambiente").value; // Salva descrizione ambientale
-            territories[currentId].trama = document.getElementById("t-trama").value;
-            territories[currentId].indizi[0] = document.getElementById("c-1").value;
-            territories[currentId].indizi[1] = document.getElementById("c-2").value;
-            territories[currentId].indizi[2] = document.getElementById("c-3").value;
-            territories[currentId].indizi[3] = document.getElementById("c-4").value;
+            territories[currentId].storia = document.getElementById("t-storia").innerHTML;
+            territories[currentId].ambiente = document.getElementById("t-ambiente").innerHTML;
+            territories[currentId].trama = document.getElementById("t-trama").innerHTML;
+            territories[currentId].indizi[currentClueIndex] = document.getElementById("t-active-clue").innerHTML;
+            
+            // Salva anche i titoli dei bottoni degli indizi
+            if (!territories[currentId].indizi_nomi) {
+                territories[currentId].indizi_nomi = ["", "", "", ""];
+            }
+            var btns = document.getElementsByClassName("clue-btn");
+            for (var i = 0; i < btns.length; i++) {
+                territories[currentId].indizi_nomi[i] = btns[i].innerText.trim();
+            }
         }
 
         document.getElementById("gdr-save-btn").innerText = "🔄 SALVATAGGIO IN CORSO...";
 
         var xhr = new XMLHttpRequest();
         xhr.open("PUT", "https://api.jsonbin.io/v3/b/" + BIN_ID, true);
-        
         xhr.setRequestHeader("Content-Type", "application/json");
         xhr.setRequestHeader("X-Master-Key", API_KEY);
         
         xhr.onreadystatechange = function () {
             if (xhr.readyState === 4) {
                 if(xhr.status === 200) {
-                    alert("✨ Modifiche e nuove posizioni salvate nel database!");
+                    alert("✨ Modifiche, titoli indizi e posizioni salvati online!");
                 } else {
                     alert("Errore di salvataggio. Codice errore di risposta: " + xhr.status);
                 }
@@ -326,7 +408,7 @@
         xhr.send(JSON.stringify(territories));
     }
 
-   function toggleMasterMode(){
+    function toggleMasterMode(){
         if (!isMasterMode) {
             var password = prompt("Inserisci la password:");
             if (password !== "NNRFATI1") {
@@ -338,35 +420,93 @@
         isMasterMode = !isMasterMode;
         document.getElementById("gdr-master-gear").style.opacity = isMasterMode ? "1" : "0.3";
         document.getElementById("gdr-save-btn").style.display = isMasterMode ? "block" : "none";
+        document.getElementById("editor-toolbar").style.display = isMasterMode ? "flex" : "none";
         
-        var fields = ["t-storia", "t-ambiente", "t-trama", "c-1", "c-2", "c-3", "c-4"];
+        // Attiva la modifica per i testi
+        var fields = ["t-storia", "t-ambiente", "t-trama", "t-active-clue"];
         fields.forEach(function(fId){
-            document.getElementById(fId).readOnly = !isMasterMode;
+            document.getElementById(fId).setAttribute("contenteditable", isMasterMode ? "true" : "false");
         });
+        
+        // Attiva la modifica per i bottoni/etichette degli indizi
+        var clueBtns = document.getElementsByClassName("clue-btn");
+        for (var i = 0; i < clueBtns.length; i++) {
+            clueBtns[i].setAttribute("contenteditable", isMasterMode ? "true" : "false");
+        }
         
         Array.from(container.getElementsByClassName("territory-btn")).forEach(function(b) {
             b.style.backgroundColor = isMasterMode ? "rgba(21, 101, 192, 0.85)" : "rgba(139,90,51,0.85)";
         });
 
-        alert(isMasterMode ? "🔓 Modalità modifica attiva: Trascina i pulsanti per spostarli, o cliccali normalmente per modificare i testi delle schede!" : "🔒 Mappa bloccata. Modalità Visualizzazione.");
+        alert(isMasterMode ? "🔓 Modalità modifica attiva: Ora puoi selezionare il testo dei box per formattarlo, o cliccare e digitare direttamente sulle etichette indizio per cambiarne il nome!" : "🔒 Mappa bloccata. Modalità Visualizzazione.");
+    }
+    
+    function switchClueTab(index) {
+        if (index === currentClueIndex) return; 
+        
+        if (currentId && territories[currentId]) {
+            // Salva il testo dell'indizio che stiamo lasciando
+            territories[currentId].indizi[currentClueIndex] = document.getElementById("t-active-clue").innerHTML;
+            
+            // Salva temporaneamente anche i titoli attuali dei bottoni
+            if (!territories[currentId].indizi_nomi) {
+                territories[currentId].indizi_nomi = ["", "", "", ""];
+            }
+            var btns = document.getElementsByClassName("clue-btn");
+            for (var i = 0; i < btns.length; i++) {
+                territories[currentId].indizi_nomi[i] = btns[i].innerText.trim();
+            }
+        }
+        
+        currentClueIndex = index;
+        
+        var btns = document.getElementsByClassName("clue-btn");
+        for(var i=0; i<btns.length; i++) { btns[i].classList.remove("active"); }
+        btns[index].classList.add("active");
+        
+        if (currentId && territories[currentId]) {
+            document.getElementById("t-active-clue").innerHTML = territories[currentId].indizi[index] || "";
+        }
     }
     
     function openModal(id){
         currentId = id;
         var t = territories[id];
         document.getElementById("m-title").innerText = t.name;
-        document.getElementById("t-storia").value = t.storia || "";
-        document.getElementById("t-ambiente").value = t.ambiente || ""; // Carica descrizione ambientale
-        document.getElementById("t-trama").value = t.trama || "";
-        document.getElementById("c-1").value = t.indizi[0] || "";
-        document.getElementById("c-2").value = t.indizi[1] || "";
-        document.getElementById("c-3").value = t.indizi[2] || "";
-        document.getElementById("c-4").value = t.indizi[3] || "";
+        
+        document.getElementById("t-storia").innerHTML = t.storia || "";
+        document.getElementById("t-ambiente").innerHTML = t.ambiente || "";
+        document.getElementById("t-trama").innerHTML = t.trama || "";
+        
+        currentClueIndex = 0;
+        
+        var btns = document.getElementsByClassName("clue-btn");
+        for(var i=0; i<btns.length; i++) { 
+            btns[i].classList.remove("active"); 
+            
+            // Carica il nome personalizzato se salvato, altrimenti mette di default "Indizio X"
+            var nomeDefault = "Indizio " + (i + 1);
+            btns[i].innerText = (t.indizi_nomi && t.indizi_nomi[i] && t.indizi_nomi[i].trim() !== "") ? t.indizi_nomi[i] : nomeDefault;
+        }
+        btns[0].classList.add("active");
+        document.getElementById("t-active-clue").innerHTML = t.indizi[0] || "";
+        
         switchTab("storia");
         document.getElementById("loc-modal").classList.add("active");
     }
 
     function closeModal(){
+        if (currentId && territories[currentId]) {
+            territories[currentId].indizi[currentClueIndex] = document.getElementById("t-active-clue").innerHTML;
+            
+            if (!territories[currentId].indizi_nomi) {
+                territories[currentId].indizi_nomi = ["", "", "", ""];
+            }
+            var btns = document.getElementsByClassName("clue-btn");
+            for (var i = 0; i < btns.length; i++) {
+                territories[currentId].indizi_nomi[i] = btns[i].innerText.trim();
+            }
+        }
         document.getElementById("loc-modal").classList.remove("active");
     }
 
@@ -389,6 +529,20 @@
     document.getElementById("t-btn-storia").onclick = function(){ switchTab("storia") };
     document.getElementById("t-btn-trama").onclick = function(){ switchTab("trama") };
     document.getElementById("gdr-save-btn").onclick = salvaDatabase;
+    
+    var clueBtns = document.getElementsByClassName("clue-btn");
+    for(var i=0; i<clueBtns.length; i++) {
+        clueBtns[i].onclick = (function(idx){
+            return function() { switchClueTab(idx); };
+        })(i);
+        
+        clueBtns[i].onkeydown = function(e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                this.blur();
+            }
+        };
+    }
 
     scaricaDatabase();
 })();
